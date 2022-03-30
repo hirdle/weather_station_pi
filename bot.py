@@ -7,6 +7,10 @@ import telebot
 import requests
 from telebot import types
 from multiprocessing.context import Process
+import Adafruit_DHT
+ 
+DHT_SENSOR = Adafruit_DHT.DHT11
+DHT_PIN = 4
 
 TOKEN = '5194527013:AAGKZcXHcub8E4UJM0U_HG9CxSUPDAeGmXU'
 bot = telebot.TeleBot(TOKEN)
@@ -52,6 +56,7 @@ def get_forecast_data(days):
         return result_forecast
     except:
         pass
+
 def start_function(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     item1 = types.KeyboardButton("Погода в данный момент")
@@ -83,7 +88,12 @@ def handle_text(message):
         bot.send_message(message.chat.id, 'Выберите прогноз:', reply_markup=markup)
     elif message.text.strip() == 'Погода в данный момент':
         weather_data = requests.get("http://api.openweathermap.org/data/2.5/weather", params=api_weather_data).json()
-        bot.send_message(message.chat.id, weather_text.format(city_ru, weather_data['main']['temp'], weather_data['main']['humidity'], weather_data['main']['pressure'], weather_data['main']['feels_like']))
+
+        humidity, temperature = Adafruit_DHT.read(DHT_SENSOR, DHT_PIN)
+        if humidity is not None and temperature is not None:
+            bot.send_message(message.chat.id, weather_text.format(city_ru, temperature, humidity, weather_data['main']['pressure'], weather_data['main']['feels_like']))
+        else:
+            bot.send_message(message.chat.id, weather_text.format(city_ru, weather_data['main']['temp'], weather_data['main']['humidity'], weather_data['main']['pressure'], weather_data['main']['feels_like']))
     elif message.text.strip() == 'Прогноз на 1 день':
         bot.send_message(message.chat.id, get_forecast_data(2), parse_mode= 'Markdown')
     elif message.text.strip() == 'Прогноз на 3 дня':
