@@ -1,15 +1,53 @@
 # -*- coding: utf-8 -*-
 
-from unittest import result
 import schedule
 import time
 import telebot
 import requests
 from telebot import types
 from multiprocessing.context import Process
-import Adafruit_DHT
+# import Adafruit_DHT
+import json
+
+filename = 'data.json'
+data = None
+
+with open(filename, "r") as file:
+    data = json.load(file)
+
+def send_schedules_messages():
+    for i in data[0]['times']:
+
+        schedule.every().day.at("10:30").do(job)
+
+def show_time():
+    message_data = ""
+    for i in data[0]['times']:
+        message_data += (i+"\n")
+    return message_data
+
+def dump_json():
+    with open(filename, "w") as file:
+        json.dump(data, file)
+
+def delete_time(time):
+    for i in range(len(data[0]['times'])):
+        if data[0]['times'][i] == time:
+            data[0]['times'].pop(i)
+
+    dump_json()
+
+def add_time(time):
+    element_is = False
+    for i in range(len(data[0]['times'])):
+        if data[0]['times'][i] == time:
+            element_is = True
+
+    if(element_is == False):
+        data[0]['times'].append(time)
+    dump_json()
  
-DHT_SENSOR = Adafruit_DHT.DHT11
+# DHT_SENSOR = Adafruit_DHT.DHT11
 DHT_PIN = 4
 
 TOKEN = '5194527013:AAGKZcXHcub8E4UJM0U_HG9CxSUPDAeGmXU'
@@ -57,12 +95,31 @@ def get_forecast_data(days):
     except:
         pass
 
+def add_times(result_time):
+    markup = return_menu()
+    add_time(result_time.text)
+    bot.send_message(result_time.chat.id, "*Время {0} успешно добавлено*".format(result_time.text), parse_mode= 'Markdown', reply_markup=markup)
+
+def delete_times(result_time):
+    if(result_time.text != "Назад в меню"):
+        markup = return_menu()
+        delete_time(result_time.text)
+        bot.send_message(result_time.chat.id, "*Время {0} успешно удалено*".format(result_time.text), parse_mode= 'Markdown', reply_markup=markup)
+
+def return_menu():
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    item1 = types.KeyboardButton("Назад в меню")
+    markup.add(item1)
+    return markup
+
 def start_function(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     item1 = types.KeyboardButton("Погода в данный момент")
     item2 = types.KeyboardButton("Прогноз погоды")
+    item3 = types.KeyboardButton("Настройка оповещения")
     markup.add(item1)
     markup.add(item2)
+    markup.add(item3)
     bot.send_message(message.chat.id, 'Выберите функцию:', reply_markup=markup)
 
 @bot.message_handler(commands=["start"])
@@ -72,7 +129,6 @@ def start(message, res=False):
 
 @bot.message_handler(content_types=["text"])
 def handle_text(message):
-    answer = ""
     if message.text.strip() == 'Прогноз погоды':
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         item5 = types.KeyboardButton("Прогноз на сегодня")
@@ -89,11 +145,11 @@ def handle_text(message):
     elif message.text.strip() == 'Погода в данный момент':
         weather_data = requests.get("http://api.openweathermap.org/data/2.5/weather", params=api_weather_data).json()
 
-        humidity, temperature = Adafruit_DHT.read(DHT_SENSOR, DHT_PIN)
-        if humidity is not None and temperature is not None:
-            bot.send_message(message.chat.id, weather_text.format(city_ru, temperature, humidity, weather_data['main']['pressure'], weather_data['main']['feels_like']))
-        else:
-            bot.send_message(message.chat.id, weather_text.format(city_ru, weather_data['main']['temp'], weather_data['main']['humidity'], weather_data['main']['pressure'], weather_data['main']['feels_like']))
+        # humidity, temperature = Adafruit_DHT.read(DHT_SENSOR, DHT_PIN)
+        # if humidity is not None and temperature is not None:
+        #     bot.send_message(message.chat.id, weather_text.format(city_ru, temperature, humidity, weather_data['main']['pressure'], weather_data['main']['feels_like']))
+        # else:
+        bot.send_message(message.chat.id, weather_text.format(city_ru, weather_data['main']['temp'], weather_data['main']['humidity'], weather_data['main']['pressure'], weather_data['main']['feels_like']))
     elif message.text.strip() == 'Прогноз на 1 день':
         bot.send_message(message.chat.id, get_forecast_data(2), parse_mode= 'Markdown')
     elif message.text.strip() == 'Прогноз на 3 дня':
@@ -103,10 +159,34 @@ def handle_text(message):
     elif message.text.strip() == 'Прогноз на 5 дней':
         bot.send_message(message.chat.id, get_forecast_data(5), parse_mode= 'Markdown')
 
+    elif message.text.strip() == 'Настройка оповещения':
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        item1 = types.KeyboardButton("Показать все время оповещения")
+        item2 = types.KeyboardButton("Добавить оповещение")
+        item3 = types.KeyboardButton("Удалить оповещение")
+        item4 = types.KeyboardButton("Назад в меню")
+        markup.add(item1)
+        markup.add(item2)
+        markup.add(item3)
+        markup.add(item4)
+        bot.send_message(message.chat.id, 'Выберите функцию:', reply_markup=markup)
+
+    elif message.text.strip() == 'Показать все время оповещения':
+        message_data = show_time()
+        bot.send_message(message.chat.id, message_data)
+
     elif message.text.strip() == 'Назад в меню':
         start_function(message)
 
-    # bot.send_message(message.chat.id, answer)
+    elif message.text.strip() == 'Добавить оповещение':
+        markup = return_menu()
+        send = bot.send_message(message.chat.id, 'Напишите время, которое хотите добавить', reply_markup=markup)
+        bot.register_next_step_handler(send, add_times)
+    elif message.text.strip() == 'Удалить оповещение':
+        message_data = show_time()
+        markup = return_menu()
+        send = bot.send_message(message.chat.id, 'Напишите время, которое хотите удалить: \n'+ message_data, reply_markup=markup)
+        bot.register_next_step_handler(send, delete_times)
 
 
 class ScheduleMessage():

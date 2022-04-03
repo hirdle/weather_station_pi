@@ -5,6 +5,9 @@ filename = 'data.json'
 with open(filename, "r") as file:
     data = json.load(file)
 
+def show_time():
+    return data
+
 def delete_time(time):
     for i in range(len(data[0]['times'])):
         if data[0]['times'][i] == time:
