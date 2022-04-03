@@ -19,8 +19,10 @@ def send():
     bot.send_message(941935092, "effefef")
 
 def send_schedules_messages():
+    print('gfhfhf')
+    with open(filename, "r") as file:
+        data = json.load(file)
     for i in data[0]['times']:
-
         schedule.every().day.at(i).do(send)
 send_schedules_messages()
 def show_time():
