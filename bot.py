@@ -15,11 +15,14 @@ data = None
 with open(filename, "r") as file:
     data = json.load(file)
 
+def send():
+    bot.send_message(941935092, "effefef")
+
 def send_schedules_messages():
     for i in data[0]['times']:
 
-        schedule.every().day.at(i).do(print, 'pizdes')
-
+        schedule.every().day.at(i).do(send)
+send_schedules_messages()
 def show_time():
     message_data = ""
     for i in data[0]['times']:
