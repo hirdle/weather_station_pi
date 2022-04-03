@@ -18,7 +18,7 @@ with open(filename, "r") as file:
 def send_schedules_messages():
     for i in data[0]['times']:
 
-        schedule.every().day.at("10:30").do(job)
+        schedule.every().day.at(i).do(print, 'pizdes')
 
 def show_time():
     message_data = ""
