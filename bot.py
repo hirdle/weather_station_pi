@@ -32,7 +32,7 @@ def show_time():
 def dump_json():
     with open(filename, "w") as file:
         json.dump(data, file)
-        send_schedules_messages()
+    send_schedules_messages()
 
 
 def delete_time(time):
