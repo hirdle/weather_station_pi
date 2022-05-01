@@ -12,10 +12,49 @@ import json
 filename = 'data.json'
 data = None
 
+ 
+DHT_SENSOR = Adafruit_DHT.DHT11
+DHT_PIN = 4
+
+TOKEN = '5194527013:AAGKZcXHcub8E4UJM0U_HG9CxSUPDAeGmXU'
+bot = telebot.TeleBot(TOKEN)
+
+
+import Adafruit_BMP.BMP085 as BMP085
+bmp180Sensor = BMP085.BMP085()
+
+tel_id_1 = 941935092
+
+weather_text = """
+Информация о погоде {0}:\n
+Температура - {1}C
+Влажность - {2}%
+Давление - {3} мм ртуртного столба
+Высота над уровнем моря: {4} м
+Ощущается как - {5}C
+"""
+city_ru = 'Пенза'
+city_en = 'Penza'
+API_key_weather = "3ba9c0e9246cf9ee76413878ea521077"
+
+api_weather_data = {'q': city_en, 'units': 'metric', 'APPID': API_key_weather, 'lang': 'ru'}
+
+def send():
+    weather_data = requests.get("http://api.openweathermap.org/data/2.5/weather", params=api_weather_data).json()
+
+    tempBMP = round(bmp180Sensor.read_temperature(), 1)
+    presBMP = round(bmp180Sensor.read_pressure()/100*0.7501, 1)
+    altBMP =  round(bmp180Sensor.read_altitude(),1)
+
+    humidity, temperature = Adafruit_DHT.read(DHT_SENSOR, DHT_PIN)
+    if humidity is not None:
+        bot.send_message(tel_id_1, weather_text.format(city_ru, tempBMP, humidity, presBMP, altBMP, weather_data['main']['feels_like']))
+    else:
+        bot.send_message(tel_id_1, weather_text.format(city_ru, tempBMP, weather_data['main']['humidity'], presBMP, altBMP, weather_data['main']['feels_like']))
+
+
 with open(filename, "r") as file:
     data = json.load(file)
-
-
 
 def send_schedules_messages():
     with open(filename, "r") as file:
@@ -51,32 +90,7 @@ def add_time(time):
     if(element_is == False):
         data[0]['times'].append(time)
     dump_json()
- 
-DHT_SENSOR = Adafruit_DHT.DHT11
-DHT_PIN = 4
 
-TOKEN = '5194527013:AAGKZcXHcub8E4UJM0U_HG9CxSUPDAeGmXU'
-bot = telebot.TeleBot(TOKEN)
-
-
-import Adafruit_BMP.BMP085 as BMP085
-bmp180Sensor = BMP085.BMP085()
-
-tel_id_1 = "941935092"
-
-weather_text = """
-Информация о погоде {0}:\n
-Температура - {1}C
-Влажность - {2}%
-Давление - {3} мм ртуртного столба
-Высота над уровнем моря: {4} м
-Ощущается как - {5}C
-"""
-city_ru = 'Пенза'
-city_en = 'Penza'
-API_key_weather = "3ba9c0e9246cf9ee76413878ea521077"
-
-api_weather_data = {'q': city_en, 'units': 'metric', 'APPID': API_key_weather, 'lang': 'ru'}
 
 def get_forecast_data(days):
     try:
@@ -121,18 +135,6 @@ def return_menu():
     markup.add(item1)
     return markup
 
-def send():
-    weather_data = requests.get("http://api.openweathermap.org/data/2.5/weather", params=api_weather_data).json()
-
-    tempBMP = round(bmp180Sensor.read_temperature(), 1)
-    presBMP = round(bmp180Sensor.read_pressure()/100*0.7501, 1)
-    altBMP =  round(bmp180Sensor.read_altitude(),1)
-
-    humidity, temperature = Adafruit_DHT.read(DHT_SENSOR, DHT_PIN)
-    if humidity is not None:
-        bot.send_message(941935092, weather_text.format(city_ru, tempBMP, humidity, presBMP, altBMP, weather_data['main']['feels_like']))
-    else:
-        bot.send_message(941935092, weather_text.format(city_ru, tempBMP, weather_data['main']['humidity'], presBMP, altBMP, weather_data['main']['feels_like']))
 
 def start_function(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
