@@ -213,10 +213,13 @@ class ScheduleMessage():
         p1 = Process(target=ScheduleMessage.try_send_schedule, args=())
         p1.start()
  
+
+bot.polling(none_stop=True)
+
  
-if __name__ == '__main__':
-    ScheduleMessage.start_process()
-    try:
-        bot.polling(none_stop=True)
-    except:
-        pass
+# if __name__ == '__main__':
+#     ScheduleMessage.start_process()
+#     try:
+#         bot.polling(none_stop=True)
+#     except:
+#         pass
