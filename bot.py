@@ -19,7 +19,6 @@ def send():
     bot.send_message(941935092, "effefef")
 
 def send_schedules_messages():
-    print('gfhfhf')
     with open(filename, "r") as file:
         data = json.load(file)
     for i in data[0]['times']:
@@ -64,18 +63,15 @@ bot = telebot.TeleBot(TOKEN)
 import Adafruit_BMP.BMP085 as BMP085
 bmp180Sensor = BMP085.BMP085()
 
-
-
 tel_id_1 = "941935092"
 
 weather_text = """
 Информация о погоде {0}:\n
 Температура - {1}C
 Влажность - {2}%
-Давление - {3}Гп
-Высота над уровнем моря: {4}
+Давление - {3}мм ртуртного столба
+Высота над уровнем моря: {4}м.
 Ощущается как - {5}C
-Все. конец.
 """
 city_ru = 'Пенза'
 city_en = 'Penza'
