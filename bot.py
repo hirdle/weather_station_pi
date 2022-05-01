@@ -15,8 +15,7 @@ data = None
 with open(filename, "r") as file:
     data = json.load(file)
 
-def send():
-    bot.send_message(941935092, "effefef")
+
 
 def send_schedules_messages():
     with open(filename, "r") as file:
@@ -121,6 +120,19 @@ def return_menu():
     item1 = types.KeyboardButton("Назад в меню")
     markup.add(item1)
     return markup
+
+def send():
+    weather_data = requests.get("http://api.openweathermap.org/data/2.5/weather", params=api_weather_data).json()
+
+    tempBMP = round(bmp180Sensor.read_temperature(), 1)
+    presBMP = round(bmp180Sensor.read_pressure()/100*0.7501, 1)
+    altBMP =  round(bmp180Sensor.read_altitude(),1)
+
+    humidity, temperature = Adafruit_DHT.read(DHT_SENSOR, DHT_PIN)
+    if humidity is not None:
+        bot.send_message(941935092, weather_text.format(city_ru, tempBMP, humidity, presBMP, altBMP, weather_data['main']['feels_like']))
+    else:
+        bot.send_message(941935092, weather_text.format(city_ru, tempBMP, weather_data['main']['humidity'], presBMP, altBMP, weather_data['main']['feels_like']))
 
 def start_function(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
