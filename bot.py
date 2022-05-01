@@ -39,7 +39,7 @@ API_key_weather = "3ba9c0e9246cf9ee76413878ea521077"
 
 api_weather_data = {'q': city_en, 'units': 'metric', 'APPID': API_key_weather, 'lang': 'ru'}
 
-def send():
+def send_now_data(id):
     weather_data = requests.get("http://api.openweathermap.org/data/2.5/weather", params=api_weather_data).json()
 
     tempBMP = round(bmp180Sensor.read_temperature(), 1)
@@ -48,9 +48,12 @@ def send():
 
     humidity, temperature = Adafruit_DHT.read(DHT_SENSOR, DHT_PIN)
     if humidity is not None:
-        bot.send_message(tel_id_1, weather_text.format(city_ru, tempBMP, humidity, presBMP, altBMP, weather_data['main']['feels_like']))
+        bot.send_message(id, weather_text.format(city_ru, tempBMP, humidity, presBMP, altBMP, tempBMP - 5))
     else:
-        bot.send_message(tel_id_1, weather_text.format(city_ru, tempBMP, weather_data['main']['humidity'], presBMP, altBMP, weather_data['main']['feels_like']))
+        bot.send_message(id, weather_text.format(city_ru, tempBMP, weather_data['main']['humidity'], presBMP, altBMP, tempBMP - 5))
+
+def send():
+    send_now_data(tel_id_1)
 
 
 with open(filename, "r") as file:
@@ -167,17 +170,7 @@ def handle_text(message):
         markup.add(item4)
         bot.send_message(message.chat.id, 'Выберите прогноз:', reply_markup=markup)
     elif message.text.strip() == 'Погода в данный момент':
-        weather_data = requests.get("http://api.openweathermap.org/data/2.5/weather", params=api_weather_data).json()
-
-        tempBMP = round(bmp180Sensor.read_temperature(), 1)
-        presBMP = round(bmp180Sensor.read_pressure()/100*0.7501, 1)
-        altBMP =  round(bmp180Sensor.read_altitude(),1)
-
-        humidity, temperature = Adafruit_DHT.read(DHT_SENSOR, DHT_PIN)
-        if humidity is not None:
-            bot.send_message(message.chat.id, weather_text.format(city_ru, tempBMP, humidity, presBMP, altBMP, weather_data['main']['feels_like']))
-        else:
-            bot.send_message(message.chat.id, weather_text.format(city_ru, tempBMP, weather_data['main']['humidity'], presBMP, altBMP, weather_data['main']['feels_like']))
+        send_now_data(message.chat.id)
     elif message.text.strip() == 'Прогноз на 1 день':
         bot.send_message(message.chat.id, get_forecast_data(2), parse_mode= 'Markdown')
     elif message.text.strip() == 'Прогноз на 3 дня':
