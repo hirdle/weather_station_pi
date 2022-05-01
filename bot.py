@@ -153,7 +153,6 @@ def handle_text(message):
         markup.add(item4)
         bot.send_message(message.chat.id, 'Выберите прогноз:', reply_markup=markup)
     elif message.text.strip() == 'Погода в данный момент':
-        print('lox')
         weather_data = requests.get("http://api.openweathermap.org/data/2.5/weather", params=api_weather_data).json()
 
         tempBMP = round(bmp180Sensor.read_temperature(), 1)
